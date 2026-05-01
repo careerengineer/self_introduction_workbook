@@ -107,8 +107,8 @@ const STEPS = [
     intro: '',
     stuckNote: "Q1~Q2에 답이 안 된다면 → 채용공고를 아직 충분히 분석하지 못한 것입니다 → 채용공고 분석 가이드를 먼저 진행하세요 Q3에 답이 안 된다면 → 직무에 대한 리서치가 부족한 것입니다 → 직무분석 가이드를 먼저 진행하거나, 같은 직무 채용공고 3개 이상을 비교해보세요 혹은 Q2에서 해석한 키워드 중 가장 중요하다고 생각하는 것 1개를 골라 Q3 대신 사용해도 됩니다",
     questions: [
-      { label: "Q1", question: "채용공고 직무상세에서 반복되거나 눈에 띄는 키워드 3개를 적으세요", tip: '', checkpoint: "채용담당자: \"JD를 제대로 읽었는가?\"", placeholder: "1. 2. 3.", references: [], relatedWorkbooks: ['job_analysis'] },
-      { label: "Q2", question: "각 키워드가 실제 업무에서 무엇을 의미하는지 본인의 말로 해석하세요", tip: "JD 베껸쓰기 금지. '이 역량이 왜 중요한지'까지", checkpoint: "채용담당자: \"직무의 본질을 이해하고 있는가?\"", placeholder: '', references: [], relatedWorkbooks: ['job_analysis'] },
+      { label: "Q1", question: "채용공고 직무상세에서 반복되거나 눈에 띄는 키워드 3개를 적으세요", tip: '', checkpoint: "채용담당자: \"직무상세내용을 제대로 읽었는가?\"", placeholder: "1. 2. 3.", references: [], relatedWorkbooks: ['job_analysis'] },
+      { label: "Q2", question: "각 키워드가 실제 업무에서 무엇을 의미하는지 본인의 말로 해석하세요", tip: "직무상세내용 베껸쓰기 금지. '이 역량이 왜 중요한지'까지", checkpoint: "채용담당자: \"직무의 본질을 이해하고 있는가?\"", placeholder: '', references: [], relatedWorkbooks: ['job_analysis'] },
       { label: "Q3", question: "이 직무에서 잘하는 사람과 못하는 사람의 결정적 차이는 무엇이라고 생각하나요?", tip: "이것이 첫 문장의 핵심 키워드 원천", checkpoint: "채용담당자: \"직무 이해의 깊이가 있는가?\"", placeholder: '', references: ["Q1", "Q2"], relatedWorkbooks: ['job_analysis'] },
     ],
   },
@@ -151,7 +151,7 @@ const STEPS = [
     intro: '',
     stuckNote: "Q11에 답이 안 된다면 → PART 1의 Q3이 부실한 것입니다. Q3 또는 Q2에서 핵심 키워드를 다시 확인하세요 Q12~Q13에 답이 안 된다면 → PART 2~4의 답변이 부실한 것입니다. 해당 PART로 돌아가 보완하세요",
     questions: [
-      { label: "Q11", question: "첫 문장을 만드세요: [JD에서 내가 가장 잘할 수 있는 업무의 핵심 키워드] + [그 역량으로 만드는 가치] + [이름]", tip: "Q3의 '결정적 차이'와 JD 업무 목록을 결합", checkpoint: "채용담당자: \"직무를 알고 강점도 있구나\"", placeholder: '', references: ["Q3", "Q7", "Q8"], relatedWorkbooks: ['job_analysis', 'experience'] },
+      { label: "Q11", question: "첫 문장을 만드세요: [직무상세내용에서 내가 가장 잘할 수 있는 업무의 핵심 키워드] + [그 역량으로 만드는 가치] + [이름]", tip: "Q3의 '결정적 차이'와 직무상세내용 업무 목록을 결합", checkpoint: "채용담당자: \"직무를 알고 강점도 있구나\"", placeholder: '', references: ["Q3", "Q7", "Q8"], relatedWorkbooks: ['job_analysis', 'experience'] },
       { label: "Q12", question: "30초 버전 키워드 카드 (4~5개) 첫문장 + 핵심경험의미 + 강점발전 + 지원동기", tip: "이 키워드만 보고 30초간 말할 수 있어야 합니다", checkpoint: '', placeholder: "① ② ③ ④", references: ["Q11", "Q4", "Q5-c", "Q8", "Q10"], relatedWorkbooks: ['experience', 'self_introduction'] },
       { label: "Q13", question: "1분 버전 키워드 카드 (8~10개) 30초 + 성과/차별점 + 구체적 기여방향 추가", tip: "면접 당일 출력해서 직전에 확인할 나침반", checkpoint: '', placeholder: "① ② ③ ④ ⑤ ⑥ ⑦ ⑧", references: ["Q12", "Q6"], relatedWorkbooks: ['self_introduction'] },
     ],
@@ -202,7 +202,7 @@ const FirstVisitModal = ({ open, onClose }) => {
           </div>
           <div style={{ display: 'flex', gap: 8, fontSize: 16, color: '#0E2750', lineHeight: 1.7 }}>
             <span style={{ color: '#C9A86A', fontWeight: 700, minWidth: 20 }}>2.</span>
-            <span>각 Q마다 <strong>질문 · 채용담당자 체크포인트 · 답변란</strong>이 있습니다. 채용공고(JD)를 열어두고 작성하세요.</span>
+            <span>각 Q마다 <strong>질문 · 채용담당자 체크포인트 · 답변란</strong>이 있습니다. 채용공고(직무상세내용)를 열어두고 작성하세요.</span>
           </div>
           <div style={{ display: 'flex', gap: 8, fontSize: 16, color: '#0E2750', lineHeight: 1.7 }}>
             <span style={{ color: '#C9A86A', fontWeight: 700, minWidth: 20 }}>3.</span>
