@@ -22,8 +22,7 @@ const RADIUS = { sm: 6, base: 10, md: 14, pill: 999 };
 // ════════════════════════════════════════════════════════════════
 //  CareerEngineer 워크북 라이브러리 (URL은 나중에 일괄 적용)
 // ════════════════════════════════════════════════════════════════
-const WORKBOOK_LINKS = {
-  roadmap:            { label: 'STEP 0 · 취업준비 진단', url: 'https://www.latpeed.com/products/nDbq9' },
+const WORKBOOK_LINKS = { career_roadmap: { label: 'STEP 0 · 취업준비 진단', url: 'https://www.latpeed.com/products/nDbq9' },
   job_analysis:       { label: 'STEP 1 · 채용공고 및 직무 분석', url: 'https://www.latpeed.com/products/-3Wgm' },
   experience:         { label: 'STEP 2 · 경험 정리', url: 'https://www.latpeed.com/products/wDSaj' },
   motivation:         { label: 'STEP 4 · 지원동기 작성', url: 'https://www.latpeed.com/products/dfdMW' },
@@ -163,7 +162,7 @@ const STEPS = [
     intro: "키워드만 있으면 '나열'이 됩니다. 키워드 사이를 자연스럽게 잇는 연결 문장이 있어야 '이야기'가 됩니다. 아래 4개의 연결 지점을 채우세요.",
     stuckNote: '',
     questions: [
-      { label: "Q14", question: "첫 문장(Q11) → 경험(Q4)", tip: '', checkpoint: "Bad: '저는 대학 시절 프로젝트를 했습니다' (갑작스러운 전환) Good: '이런 가치를 깨달은 계기는 OO 프로젝트에서였습니다' (첫 문장의 가치와 연결)", placeholder: '', references: ["Q11", "Q4"], relatedWorkbooks: ['roadmap'] },
+      { label: "Q14", question: "첫 문장(Q11) → 경험(Q4)", tip: '', checkpoint: "Bad: '저는 대학 시절 프로젝트를 했습니다' (갑작스러운 전환) Good: '이런 가치를 깨달은 계기는 OO 프로젝트에서였습니다' (첫 문장의 가치와 연결)", placeholder: '', references: ["Q11", "Q4"], relatedWorkbooks: ['career_roadmap'] },
       { label: "Q15", question: "깨달음(Q5) → 성과(Q6)", tip: '', checkpoint: "Bad: '그리고 A/B 테스트도 해봤습니다' (나열) Good: '이 깨달음을 바탕으로 실제로 적용해본 경험이 있습니다' (인과관계)", placeholder: '', references: ["Q5-a", "Q5-b", "Q5-c", "Q6"], relatedWorkbooks: ['experience'] },
       { label: "Q16", question: "성과(Q6) → 강점(Q8)", tip: '', checkpoint: "Bad: '저의 장점은 꼼꼼함입니다' (맥락 없는 전환) Good: '이런 경험들을 통해 꼼꼼함이 디테일에서 개선점을 찾는 분석력으로 발전했습니다' (경험에서 강점으로)", placeholder: '', references: ["Q6", "Q8"], relatedWorkbooks: ['experience'] },
       { label: "Q17", question: "강점(Q8) → 지원동기(Q9~10)", tip: '', checkpoint: "Bad: '귀사에 입사하고 싶습니다' (동기 없음) Good: '이 분석력을 귀사의 고객 데이터 기반 환경에서 발휘하고 싶습니다' (강점이 회사 업무로 직접 연결)", placeholder: '', references: ["Q8", "Q9", "Q10"], relatedWorkbooks: ['experience'] },
@@ -193,8 +192,8 @@ const CHECKLIST = [
 const FirstVisitModal = ({ open, onClose }) => {
   if (!open) return null;
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(11, 23, 51, 0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 14, padding: 32, maxWidth: 480, width: '100%', boxShadow: '0 20px 50px rgba(11, 23, 51,0.2)' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(14, 39, 80, 0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: 14, padding: 32, maxWidth: 480, width: '100%', boxShadow: '0 20px 50px rgba(14, 39, 80,0.2)' }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0E2750', margin: 0, marginBottom: 16 }}>1분 자기소개 워크북 사용 안내</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
           <div style={{ display: 'flex', gap: 8, fontSize: 16, color: '#0E2750', lineHeight: 1.7 }}>
@@ -235,7 +234,7 @@ const FocusStyles = () => (
   <style>{`
     .ce-input:focus, .ce-textarea:focus {
       border-color: ${COLORS.accent2} !important;
-      box-shadow: 0 0 0 3px rgba(182, 117, 74, 0.12) !important;
+      box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.12) !important;
     }
     .ce-save-btn:hover { opacity: 0.88; }
     .ce-check-input { cursor: pointer; accent-color: ${COLORS.accent2}; }
@@ -335,7 +334,7 @@ const SelfIntroWorkbook = () => {
     
     // 7단계 구조 - 자소서 5대 항목만 하위 항목 펼침, 나머지는 단일 링크
     const stepGroups = [
-      { step: '0', label: '취업준비 진단', key: 'roadmap' },
+      { step: '0', label: '취업준비 진단', key: 'career_roadmap' },
       { step: '1', label: '채용공고 및 직무 분석', key: 'job_analysis' },
       { step: '2', label: '경험 정리', key: 'experience' },
       { step: '3', inline: true, label: '', items: [
@@ -608,7 +607,7 @@ const SelfIntroWorkbook = () => {
     page: { minHeight: '100vh', background: COLORS.bgAlt, padding: SPACING.md, fontFamily: FONT.family, color: COLORS.accent },
     container: { maxWidth: 900, margin: '0 auto' },
     card: { background: COLORS.bg, borderRadius: RADIUS.md, padding: SPACING.lg, border: `1px solid ${COLORS.border}`, marginBottom: SPACING.md },
-    headerSticky: { background: COLORS.bgAlt, borderRadius: RADIUS.md, padding: SPACING.md, border: `1px solid ${COLORS.border}`, marginBottom: SPACING.md, position: 'sticky', top: SPACING.md, zIndex: 10, boxShadow: '0 2px 8px rgba(11, 23, 51, 0.12)' },
+    headerSticky: { background: COLORS.bgAlt, borderRadius: RADIUS.md, padding: SPACING.md, border: `1px solid ${COLORS.border}`, marginBottom: SPACING.md, position: 'sticky', top: SPACING.md, zIndex: 10, boxShadow: '0 2px 8px rgba(14, 39, 80, 0.12)' },
     cardLarge: { background: COLORS.bg, borderRadius: RADIUS.md, padding: SPACING.xl, border: `1px solid ${COLORS.border}`, marginBottom: SPACING.md },
     h1Center: { fontSize: FONT.size.h1, fontWeight: FONT.weight.bold, color: COLORS.accent, margin: `0 0 ${SPACING.md}px`, lineHeight: FONT.lineHeight.tight, textAlign: 'center' },
     h2: { fontSize: FONT.size.h2, fontWeight: FONT.weight.bold, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.tight },
@@ -640,6 +639,26 @@ const SelfIntroWorkbook = () => {
       <FocusStyles />
       <FirstVisitModal open={showHelp} onClose={() => setShowHelp(false)} />
       <div style={S.container}>
+        <div style={S.headerSticky}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.base, flexWrap: 'wrap' }}>
+            <CELockupA height={32} />
+            <div style={{ position: 'relative', flex: 1, display: 'flex', justifyContent: 'center' }}>
+              <button onClick={() => setShowStepNav(v => !v)} style={{ 
+                background: COLORS.bgAlt, border: 'none', cursor: 'pointer',
+                fontSize: FONT.size.sm, color: COLORS.accent, textAlign: 'center',
+                padding: '4px 12px', borderRadius: 4, fontFamily: FONT.family,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              }} title="전체 7단계 보기" className="ce-step-nav-trigger">
+                STEP 5 · 1분 자기소개 준비
+                <span style={{ fontSize: FONT.size.xs, color: COLORS.accent, opacity: 1, transform: showStepNav ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>▾</span>
+              </button>
+              <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
+            </div>
+            <button disabled className="ce-save-btn" style={{...S.btnSaveHeader, opacity: 0.4, cursor: 'not-allowed'}} title="작성을 시작하면 활성화됩니다">
+              저장(.doc)
+            </button>
+          </div>
+        </div>
         <div style={S.cardLarge}>
           {/* 브랜드 블록 (7-6-1) */}
           <div style={{ textAlign: 'center', marginBottom: SPACING.xl, paddingTop: SPACING.md }}>
@@ -733,6 +752,26 @@ const SelfIntroWorkbook = () => {
       <div style={S.page}>
         <FocusStyles />
         <div style={S.container}>
+          <div style={S.headerSticky}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.base, flexWrap: 'wrap' }}>
+              <CELockupA height={32} />
+              <div style={{ position: 'relative', flex: 1, display: 'flex', justifyContent: 'center' }}>
+                <button onClick={() => setShowStepNav(v => !v)} style={{ 
+                  background: COLORS.bgAlt, border: 'none', cursor: 'pointer',
+                  fontSize: FONT.size.sm, color: COLORS.accent, textAlign: 'center',
+                  padding: '4px 12px', borderRadius: 4, fontFamily: FONT.family,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }} title="전체 7단계 보기" className="ce-step-nav-trigger">
+                  STEP 5 · 1분 자기소개 준비
+                  <span style={{ fontSize: FONT.size.xs, color: COLORS.accent, opacity: 1, transform: showStepNav ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>▾</span>
+                </button>
+                <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
+              </div>
+              <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader}>
+                저장(.doc)
+              </button>
+            </div>
+          </div>
           <div style={S.cardLarge}>
             {/* 완성 헤더 */}
             <div style={{ textAlign: 'center', marginBottom: SPACING.xl }}>
@@ -915,12 +954,14 @@ const SelfIntroWorkbook = () => {
               <p style={{ fontSize: FONT.size.sm, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.base }}>자기소개를 실제 면접관 앞에서 점검받고 싶다면 CareerEngineer <a href="https://www.latpeed.com/products/tZ5xw" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accent2, fontWeight: FONT.weight.semibold, textDecoration: 'underline' }}>면접 멘토링</a> 프로그램으로 1:1 모의 면접을 경험하세요.</p>
             </div>
 
-            <button onClick={downloadFinal} style={{ ...S.btnPrimary, width: '100%', padding: '18px 32px', fontSize: FONT.size.lg, marginTop: SPACING.md }}>
-              최종본 다운로드 (.doc)
-            </button>
-            <button onClick={() => setCurrentStep(STEPS.length - 1)} style={{ ...S.btnSecondary, width: '100%', marginTop: SPACING.sm, justifyContent: 'center' }}>
-              이전
-            </button>
+            <div style={{ display: 'flex', gap: SPACING.sm, marginTop: SPACING.md }}>
+              <button onClick={() => { setCurrentStep(STEPS.length - 1); window.scrollTo(0,0); }} style={S.btnSecondary}>
+                이전
+              </button>
+              <button onClick={downloadFinal} style={{ ...S.btnPrimary, flex: 1, padding: '18px 32px', fontSize: FONT.size.lg }}>
+                최종본 다운로드 (.doc)
+              </button>
+            </div>
 
             {downloadSuccess && (
               <p style={{ fontSize: FONT.size.sm, color: COLORS.green, textAlign: 'center', marginTop: SPACING.md, fontWeight: FONT.weight.semibold }}>✓ 다운로드 완료</p>
