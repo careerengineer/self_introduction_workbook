@@ -1,4 +1,15 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+
+
+// __toDocxBlob: HTML을 실제 .docx Blob으로 변환 (모바일 Word 호환)
+// index.html 의 html-docx-js CDN 스크립트로 window.htmlDocx 가 제공됨
+const __toDocxBlob = (html) => {
+  if (typeof window !== 'undefined' && window.htmlDocx && window.htmlDocx.asBlob) {
+    try { return window.htmlDocx.asBlob(html); } catch (e) { console.error('htmlDocx failed:', e); }
+  }
+  return new Blob(['\ufeff' + html], { type: 'application/msword' });
+};
+
 
 // 멘토링·컨설팅 URL 상수 (작업 18: URL 상수화)
 const MENTORING_URLS = {
@@ -208,7 +219,7 @@ const IntroStickyHeader = ({ workbookKey, stepLabel, StepNavComponent }) => {
           style={{ padding: '8px 14px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', background: _INTRO_INK, color: '#fff', opacity: 0.4, cursor: 'not-allowed' }}
           title="작성을 시작하면 활성화됩니다"
         >
-          저장(.doc)
+          저장(.docx)
         </button>
       </div>
     </div>
@@ -477,9 +488,9 @@ const SelfIntroWorkbook = () => {
     });
     lines.push('\n' + '='.repeat(60));
     lines.push('© 2026 CareerEngineer. All Rights Reserved.');
-    const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:'맑은 고딕',sans-serif;line-height:1.7;padding:40px;white-space:pre-wrap}</style></head><body>${lines.join('\n')}</body></html>`;
-    const b = new Blob([h], { type: 'application/msword;charset=utf-8' }); const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_1분자기소개_임시저장_${today}.doc`; a.click();
+    const h = `<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset="utf-8"><style>@page{size:A4;margin:1.5cm 1.8cm}body{font-family:'맑은 고딕',sans-serif;line-height:1.7;padding:40px;white-space:pre-wrap;mso-pre-wrap:yes}</style></head><body>${lines.join('\n')}</body></html>`;
+    const b = __toDocxBlob(h); const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_1분자기소개_임시저장_${today}.docx`; a.click();
     URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 3000);
   };
 
@@ -771,43 +782,92 @@ const SelfIntroWorkbook = () => {
   };
 
   const downloadFinal = () => {
-    const lines = ['CareerEngineer 1분 자기소개 · 최종 완성본', '='.repeat(60), ''];
-    lines.push(`지원 회사: ${basicInfo.company || '-'}`);
-    lines.push(`지원 직무: ${basicInfo.position || '-'}`);
-    lines.push(`산업: ${basicInfo.industry || '-'}`);
-    lines.push('');
-    lines.push('━━━ 1분 버전 (최종) ━━━');
-    lines.push(finalAnswer || '(작성 전)');
-    if (shortAnswer.trim()) {
-      lines.push('');
-      lines.push('━━━ 30초 버전 ━━━');
-      lines.push(shortAnswer);
-    }
-    lines.push('');
-    lines.push('━━━ 키워드 카드 (면접 당일 확인용) ━━━');
-    lines.push(`[30초 키워드] ${answers['Q12'] || '(작성 전)'}`);
-    lines.push(`[1분 키워드] ${answers['Q13'] || '(작성 전)'}`);
-    lines.push('');
-    lines.push('━━━ 자가 점검 결과 ━━━');
-    CHECKLIST.forEach(c => {
-      lines.push(`[${checks[c.label] ? '✓' : ' '}] ${c.criteria}: ${c.question}`);
-    });
-    lines.push('');
-    lines.push('━━━ 전체 작성 내용 ━━━');
-    STEPS.forEach(s => {
-      lines.push(`\n◆ PART ${s.step}. ${s.title}`);
-      s.questions.forEach(q => {
-        const a = answers[q.label] || '(작성 전)';
-        lines.push(`\n[${q.label}] ${q.question}`);
-        lines.push(a);
-      });
-    });
-    lines.push('\n' + '='.repeat(60));
-    lines.push('© 2026 CareerEngineer. All Rights Reserved.');
-    const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:'맑은 고딕',sans-serif;line-height:1.8;padding:40px;white-space:pre-wrap}</style></head><body>${lines.join('\n')}</body></html>`;
-    const b = new Blob([h], { type: 'application/msword;charset=utf-8' }); const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_1분자기소개_최종.doc`; a.click();
-    URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
+    const today = new Date().toISOString().slice(0,10);
+    const esc = (s) => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const br = (s) => esc(s).replace(/\n/g, '<br/>');
+    
+    // 항목 표시 헬퍼 (빈 답변도 항목명 표시)
+    const item = (label, val) => `
+      <div style="margin:14pt 0 14pt 0;">
+        <p style="font-size:11pt;font-weight:bold;color:#1B3A6B;margin:0 0 6pt 0;padding-left:10pt;border-left:3pt solid #C9A86A;">${esc(label)}</p>
+        ${val && val.trim() 
+          ? `<p style="font-size:11pt;line-height:1.8;color:#0E2750;margin:0 0 0 13pt;">${br(val)}</p>` 
+          : `<p style="font-size:11pt;line-height:1.8;color:#6E7A8F;margin:0 0 0 13pt;font-style:italic;">[작성 전]</p>`}
+      </div>`;
+    
+    // 섹션 헤더
+    const sh = (t) => `<p style="font-size:14pt;font-weight:bold;color:#0E2750;margin:24pt 0 10pt 0;padding-bottom:6pt;border-bottom:2pt solid #0E2750;">${esc(t)}</p>`;
+    
+    // 메타
+    const metaLine = (basicInfo.company || basicInfo.position) 
+      ? `<p style="text-align:center;color:#1B3A6B;font-size:12pt;font-weight:bold;margin:0 0 24pt 0;">${esc(basicInfo.company || '')}${basicInfo.company && basicInfo.position ? ' · ' : ''}${basicInfo.position ? esc(basicInfo.position) + ' 지원' : ''}</p>`
+      : '';
+    
+    // 1분 본 답변 (있으면 강조 박스, 없으면 placeholder)
+    const finalSection = `${sh('1분 자기소개 — 최종 답변')}
+      ${finalAnswer && finalAnswer.trim()
+        ? `<div style="padding:18pt 22pt;background:#F2F1EC;border-left:3pt solid #0E2750;margin:6pt 0 14pt 0;">${finalAnswer.split('\n\n').filter(x => x.trim()).map(x => `<p style="font-size:12pt;line-height:2.0;color:#0E2750;margin:0 0 12pt 0;">${br(x)}</p>`).join('')}</div>`
+        : `<p style="font-size:11pt;line-height:1.9;color:#6E7A8F;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;font-style:italic;">[1분 자기소개 본 답변이 여기에 들어갑니다.]</p>`}`;
+    
+    // 30초 단축 버전
+    const shortSection = `${sh('30초 단축 버전')}
+      ${shortAnswer && shortAnswer.trim()
+        ? `<p style="font-size:11pt;line-height:1.9;color:#0E2750;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;">${br(shortAnswer)}</p>`
+        : `<p style="font-size:11pt;line-height:1.9;color:#6E7A8F;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;font-style:italic;">[30초 단축 버전이 여기에 들어갑니다.]</p>`}`;
+    
+    // 면접 당일 키워드 메모
+    const keywordsSection = `${sh('면접 당일 — 키워드 메모')}
+      ${item('30초 버전 키워드', answers['Q12'])}
+      ${item('1분 버전 키워드', answers['Q13'])}`;
+    
+    // 자가 점검 체크리스트
+    const checklistRows = CHECKLIST.map(c => `<tr><td width="24" style="padding:8pt 0;border-bottom:1pt solid #E8E5DD;color:#C9A86A;font-weight:bold;font-size:13pt;text-align:center;vertical-align:top;">${checks[c.label] ? '✓' : '·'}</td><td width="100" style="padding:8pt 10pt;border-bottom:1pt solid #E8E5DD;color:#1B3A6B;font-weight:bold;font-size:10pt;vertical-align:top;">${esc(c.criteria)}</td><td style="padding:8pt 0;border-bottom:1pt solid #E8E5DD;color:#0E2750;font-size:11pt;line-height:1.6;vertical-align:top;">${esc(c.question)}</td></tr>`).join('');
+    const checklistSection = `${sh('자가 점검 체크리스트')}
+      <table border="0" cellspacing="0" cellpadding="0" width="100%">${checklistRows}</table>`;
+    
+    // 전체 작성 내용 (모든 PART 답변)
+    const stepsHtml = STEPS.map(s => {
+      const qaItems = s.questions.map(q => item(`${q.label}. ${q.question}`, answers[q.label])).join('');
+      return `<p style="font-size:12pt;font-weight:bold;color:#1B3A6B;margin:18pt 0 8pt 0;padding-bottom:4pt;border-bottom:1pt solid #1B3A6B;">PART ${s.step}. ${esc(s.title)}</p>${qaItems}`;
+    }).join('');
+    const allAnswersSection = `${sh('전체 작성 내용')}${stepsHtml}`;
+    
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<title>1분 자기소개</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotPromptForConvert/></w:WordDocument></xml><![endif]-->
+<style>
+@page Section1 { size: A4; margin: 2.5cm 2cm; mso-page-orientation: portrait; }
+div.Section1 { page: Section1; }
+body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 11pt; color: #0E2750; line-height: 1.7; }
+p { margin: 0 0 8pt 0; }
+table { border-collapse: collapse; }
+</style>
+</head>
+<body lang="KO-KR">
+<div class="Section1">
+<p style="text-align:right;color:#6E7A8F;font-size:10pt;margin:0 0 4pt 0;">작성일 · ${today}</p>
+<p style="font-size:22pt;font-weight:bold;color:#0E2750;text-align:center;margin:0 0 6pt 0;padding-bottom:14pt;border-bottom:3pt solid #0E2750;letter-spacing:6pt;">1분 자기소개</p>
+${metaLine}
+
+${finalSection}
+${shortSection}
+${keywordsSection}
+${checklistSection}
+${allAnswersSection}
+
+</div></body></html>`;
+    
+    const BOM = '\uFEFF';
+    const b = __toDocxBlob(html);
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u;
+    a.download = `1분자기소개_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.docx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
   };
 
   const S = {
@@ -910,7 +970,7 @@ const SelfIntroWorkbook = () => {
                 <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
               </div>
               <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader}>
-                저장(.doc)
+                저장(.docx)
               </button>
             </div>
           </div>
@@ -1109,7 +1169,7 @@ const SelfIntroWorkbook = () => {
                 이전
               </button>
               <button onClick={downloadFinal} style={{ ...S.btnPrimary, flex: 1, padding: '18px 32px', fontSize: FONT.size.lg }}>
-                최종본 다운로드 (.doc)
+                최종본 다운로드 (.docx)
               </button>
             </div>
 
@@ -1150,7 +1210,7 @@ const SelfIntroWorkbook = () => {
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
             </div>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader}>
-              저장(.doc)
+              저장(.docx)
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
