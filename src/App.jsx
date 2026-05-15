@@ -807,7 +807,7 @@ const SelfIntroWorkbook = () => {
   const loadDocxLib = () => new Promise((resolve, reject) => {
     if (window.docx) return resolve(window.docx);
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/docx@9.6.1/build/index.umd.min.js';
+    script.src = 'https://unpkg.com/docx@9.6.1/dist/index.iife.js';
     script.onload = () => window.docx ? resolve(window.docx) : reject(new Error('로드 실패'));
     script.onerror = () => reject(new Error('다운로드 실패'));
     document.head.appendChild(script);
