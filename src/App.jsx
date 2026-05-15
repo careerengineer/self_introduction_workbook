@@ -1,15 +1,4 @@
-import React, { useState } from 'react';
-
-
-// __toDocxBlob: HTML을 실제 .docx Blob으로 변환 (모바일 Word 호환)
-// index.html 의 html-docx-js CDN 스크립트로 window.htmlDocx 가 제공됨
-const __toDocxBlob = (html) => {
-  if (typeof window !== 'undefined' && window.htmlDocx && window.htmlDocx.asBlob) {
-    try { return window.htmlDocx.asBlob(html); } catch (e) { console.error('htmlDocx failed:', e); }
-  }
-  return new Blob(['\ufeff' + html], { type: 'application/msword' });
-};
-
+import React, { useState, useEffect } from 'react';
 
 // 멘토링·컨설팅 URL 상수 (작업 18: URL 상수화)
 const MENTORING_URLS = {
@@ -219,7 +208,7 @@ const IntroStickyHeader = ({ workbookKey, stepLabel, StepNavComponent }) => {
           style={{ padding: '8px 14px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', background: _INTRO_INK, color: '#fff', opacity: 0.4, cursor: 'not-allowed' }}
           title="작성을 시작하면 활성화됩니다"
         >
-          저장(.docx)
+          저장(.doc)
         </button>
       </div>
     </div>
@@ -446,6 +435,61 @@ const SelfIntroWorkbook = () => {
   const [showStuckHint, setShowStuckHint] = useState({});
   const [checks, setChecks] = useState({});
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  
+  const STORAGE_KEY = 'careerengineer_self_introduction_v1';
+  
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.answers && Object.keys(data.answers).length > 0) {
+          const savedDate = data.savedAt ? new Date(data.savedAt).toLocaleString('ko-KR') : '이전';
+          if (window.confirm(`이전에 작성한 내용이 있습니다 (${savedDate}).\n불러올까요?`)) {
+            setAnswers(data.answers || {});
+            if (data.basicInfo) setBasicInfo(data.basicInfo);
+            if (data.checks) setChecks(data.checks);
+            if (typeof data.currentStep === 'number') setCurrentStep(data.currentStep);
+            if (data.showIntro === false) setShowIntro(false);
+            setAutoSaveStatus('✓ 이전 작성 내용을 불러왔습니다');
+            setTimeout(() => setAutoSaveStatus(''), 5000);
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        }
+      }
+    } catch (e) { console.warn(e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          answers, basicInfo, checks, currentStep, showIntro,
+          savedAt: new Date().toISOString()
+        }));
+        setAutoSaveStatus('✓ 자동 저장됨');
+        setTimeout(() => setAutoSaveStatus(''), 2000);
+      } catch (e) { setAutoSaveStatus('⚠ 저장 공간 부족'); }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [answers, basicInfo, checks, currentStep, showIntro]);
+  
+  const clearSavedData = () => {
+    if (window.confirm('저장된 모든 작성 내용을 삭제하고 처음부터 다시 시작합니다.\n\n계속하시겠습니까?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      setAnswers({});
+      setBasicInfo({ industry: '', position: '', company: '' });
+      setChecks({});
+      setCurrentStep(0);
+      setShowIntro(true);
+      setAutoSaveStatus('✓ 초기화 완료');
+      setTimeout(() => setAutoSaveStatus(''), 3000);
+    }
+  };
 
   const setAnswer = (id, val) => setAnswers(p => ({ ...p, [id]: val }));
   const toggleCheck = (id) => setChecks(p => ({ ...p, [id]: !p[id] }));
@@ -468,30 +512,8 @@ const SelfIntroWorkbook = () => {
   const shortAnswer = answers['Q18'] || '';  // 30초 버전 초안
 
   const savePartial = () => {
-    const today = new Date().toISOString().slice(0,10);
-    const lines = ['CareerEngineer 1분 자기소개 워크북 · 임시저장', '='.repeat(60)];
-    lines.push(`지원 회사: ${basicInfo.company || '-'}`);
-    lines.push(`지원 직무: ${basicInfo.position || '-'}`);
-    lines.push(`산업: ${basicInfo.industry || '-'}`);
-    STEPS.forEach(s => {
-      const hasAnswer = s.questions.some(q => answers[q.label]?.trim());
-      if (hasAnswer) {
-        lines.push(`\n━━━ PART ${s.step}. ${s.title} ━━━`);
-        s.questions.forEach(q => {
-          const a = answers[q.label];
-          if (a?.trim()) {
-            lines.push(`\n[${q.label}] ${q.question}`);
-            lines.push(a);
-          }
-        });
-      }
-    });
-    lines.push('\n' + '='.repeat(60));
-    lines.push('© 2026 CareerEngineer. All Rights Reserved.');
-    const h = `<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset="utf-8"><style>@page{size:A4;margin:1.5cm 1.8cm}body{font-family:'맑은 고딕',sans-serif;line-height:1.7;padding:40px;white-space:pre-wrap;mso-pre-wrap:yes}</style></head><body>${lines.join('\n')}</body></html>`;
-    const b = __toDocxBlob(h); const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_1분자기소개_임시저장_${today}.docx`; a.click();
-    URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 3000);
+    // 메인 다운로드와 동일한 디자인 사용 (모든 답변이 포함됨)
+    downloadFinal();
   };
 
   // 인라인 참고 워크북 (가이드 PART 7-15)
@@ -781,93 +803,170 @@ const SelfIntroWorkbook = () => {
     );
   };
 
-  const downloadFinal = () => {
-    const today = new Date().toISOString().slice(0,10);
-    const esc = (s) => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const br = (s) => esc(s).replace(/\n/g, '<br/>');
-    
-    // 항목 표시 헬퍼 (빈 답변도 항목명 표시)
-    const item = (label, val) => `
-      <div style="margin:14pt 0 14pt 0;">
-        <p style="font-size:11pt;font-weight:bold;color:#1B3A6B;margin:0 0 6pt 0;padding-left:10pt;border-left:3pt solid #C9A86A;">${esc(label)}</p>
-        ${val && val.trim() 
-          ? `<p style="font-size:11pt;line-height:1.8;color:#0E2750;margin:0 0 0 13pt;">${br(val)}</p>` 
-          : `<p style="font-size:11pt;line-height:1.8;color:#6E7A8F;margin:0 0 0 13pt;font-style:italic;">[작성 전]</p>`}
-      </div>`;
-    
-    // 섹션 헤더
-    const sh = (t) => `<p style="font-size:14pt;font-weight:bold;color:#0E2750;margin:24pt 0 10pt 0;padding-bottom:6pt;border-bottom:2pt solid #0E2750;">${esc(t)}</p>`;
-    
-    // 메타
-    const metaLine = (basicInfo.company || basicInfo.position) 
-      ? `<p style="text-align:center;color:#1B3A6B;font-size:12pt;font-weight:bold;margin:0 0 24pt 0;">${esc(basicInfo.company || '')}${basicInfo.company && basicInfo.position ? ' · ' : ''}${basicInfo.position ? esc(basicInfo.position) + ' 지원' : ''}</p>`
-      : '';
-    
-    // 1분 본 답변 (있으면 강조 박스, 없으면 placeholder)
-    const finalSection = `${sh('1분 자기소개 — 최종 답변')}
-      ${finalAnswer && finalAnswer.trim()
-        ? `<div style="padding:18pt 22pt;background:#F2F1EC;border-left:3pt solid #0E2750;margin:6pt 0 14pt 0;">${finalAnswer.split('\n\n').filter(x => x.trim()).map(x => `<p style="font-size:12pt;line-height:2.0;color:#0E2750;margin:0 0 12pt 0;">${br(x)}</p>`).join('')}</div>`
-        : `<p style="font-size:11pt;line-height:1.9;color:#6E7A8F;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;font-style:italic;">[1분 자기소개 본 답변이 여기에 들어갑니다.]</p>`}`;
-    
-    // 30초 단축 버전
-    const shortSection = `${sh('30초 단축 버전')}
-      ${shortAnswer && shortAnswer.trim()
-        ? `<p style="font-size:11pt;line-height:1.9;color:#0E2750;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;">${br(shortAnswer)}</p>`
-        : `<p style="font-size:11pt;line-height:1.9;color:#6E7A8F;margin:6pt 0 14pt 0;padding:14pt 18pt;background:#FBFAF6;border-left:3pt solid #C9A86A;font-style:italic;">[30초 단축 버전이 여기에 들어갑니다.]</p>`}`;
-    
-    // 면접 당일 키워드 메모
-    const keywordsSection = `${sh('면접 당일 — 키워드 메모')}
-      ${item('30초 버전 키워드', answers['Q12'])}
-      ${item('1분 버전 키워드', answers['Q13'])}`;
-    
-    // 자가 점검 체크리스트
-    const checklistRows = CHECKLIST.map(c => `<tr><td width="24" style="padding:8pt 0;border-bottom:1pt solid #E8E5DD;color:#C9A86A;font-weight:bold;font-size:13pt;text-align:center;vertical-align:top;">${checks[c.label] ? '✓' : '·'}</td><td width="100" style="padding:8pt 10pt;border-bottom:1pt solid #E8E5DD;color:#1B3A6B;font-weight:bold;font-size:10pt;vertical-align:top;">${esc(c.criteria)}</td><td style="padding:8pt 0;border-bottom:1pt solid #E8E5DD;color:#0E2750;font-size:11pt;line-height:1.6;vertical-align:top;">${esc(c.question)}</td></tr>`).join('');
-    const checklistSection = `${sh('자가 점검 체크리스트')}
-      <table border="0" cellspacing="0" cellpadding="0" width="100%">${checklistRows}</table>`;
-    
-    // 전체 작성 내용 (모든 PART 답변)
-    const stepsHtml = STEPS.map(s => {
-      const qaItems = s.questions.map(q => item(`${q.label}. ${q.question}`, answers[q.label])).join('');
-      return `<p style="font-size:12pt;font-weight:bold;color:#1B3A6B;margin:18pt 0 8pt 0;padding-bottom:4pt;border-bottom:1pt solid #1B3A6B;">PART ${s.step}. ${esc(s.title)}</p>${qaItems}`;
-    }).join('');
-    const allAnswersSection = `${sh('전체 작성 내용')}${stepsHtml}`;
-    
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="ProgId" content="Word.Document">
-<title>1분 자기소개</title>
-<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotPromptForConvert/></w:WordDocument></xml><![endif]-->
-<style>
-@page Section1 { size: A4; margin: 2.5cm 2cm; mso-page-orientation: portrait; }
-div.Section1 { page: Section1; }
-body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 11pt; color: #0E2750; line-height: 1.7; }
-p { margin: 0 0 8pt 0; }
-table { border-collapse: collapse; }
-</style>
-</head>
-<body lang="KO-KR">
-<div class="Section1">
-<p style="text-align:right;color:#6E7A8F;font-size:10pt;margin:0 0 4pt 0;">작성일 · ${today}</p>
-<p style="font-size:22pt;font-weight:bold;color:#0E2750;text-align:center;margin:0 0 6pt 0;padding-bottom:14pt;border-bottom:3pt solid #0E2750;letter-spacing:6pt;">1분 자기소개</p>
-${metaLine}
+  // docx 라이브러리 동적 로드
+  const loadDocxLib = () => new Promise((resolve, reject) => {
+    if (window.docx) return resolve(window.docx);
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/docx@9.6.1/build/index.umd.min.js';
+    script.onload = () => window.docx ? resolve(window.docx) : reject(new Error('로드 실패'));
+    script.onerror = () => reject(new Error('다운로드 실패'));
+    document.head.appendChild(script);
+  });
 
-${finalSection}
-${shortSection}
-${keywordsSection}
-${checklistSection}
-${allAnswersSection}
-
-</div></body></html>`;
-    
-    const BOM = '\uFEFF';
-    const b = __toDocxBlob(html);
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u;
-    a.download = `1분자기소개_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.docx`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(u), 1000);
-    setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
+  const downloadFinal = async () => {
+    try {
+      const docxLib = await loadDocxLib();
+      const { Document, Paragraph, TextRun, AlignmentType, BorderStyle, Packer } = docxLib;
+      const today = new Date().toISOString().slice(0,10);
+      
+      // 스타일 헬퍼
+      const titleP = (t) => new Paragraph({
+        children: [new TextRun({ text: t, bold: true, size: 44, font: '맑은 고딕', color: '0E2750', characterSpacing: 200 })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 240 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: '0E2750', space: 6 } }
+      });
+      const subtitleP = (t) => new Paragraph({
+        children: [new TextRun({ text: t, bold: true, size: 24, font: '맑은 고딕', color: '1B3A6B' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 480 }
+      });
+      const sectionH = (t) => new Paragraph({
+        children: [new TextRun({ text: t, bold: true, size: 28, font: '맑은 고딕', color: '0E2750' })],
+        spacing: { before: 480, after: 200 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '0E2750', space: 4 } }
+      });
+      const subH = (t) => new Paragraph({
+        children: [new TextRun({ text: t, bold: true, size: 24, font: '맑은 고딕', color: '1B3A6B' })],
+        spacing: { before: 360, after: 120 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '1B3A6B', space: 4 } }
+      });
+      const labelP = (t) => new Paragraph({
+        children: [new TextRun({ text: t, bold: true, size: 22, font: '맑은 고딕', color: '1B3A6B' })],
+        spacing: { before: 200, after: 80 },
+        border: { left: { style: BorderStyle.SINGLE, size: 24, color: 'C9A86A', space: 8 } },
+        indent: { left: 200 }
+      });
+      const labelBodyP = (t) => new Paragraph({
+        children: (t || '').split('\n').flatMap((line, i) => i === 0 ? [new TextRun({ text: line, size: 22, font: '맑은 고딕', color: '0E2750' })] : [new TextRun({ break: 1, text: line, size: 22, font: '맑은 고딕', color: '0E2750' })]),
+        spacing: { before: 0, after: 160, line: 360 },
+        indent: { left: 360 }
+      });
+      const placeholderP = (t) => new Paragraph({
+        children: [new TextRun({ text: t, italic: true, size: 22, font: '맑은 고딕', color: '6E7A8F' })],
+        spacing: { before: 0, after: 160, line: 360 },
+        indent: { left: 360 }
+      });
+      const highlightP = (t) => new Paragraph({
+        children: t.split('\n').flatMap((line, i) => i === 0 ? [new TextRun({ text: line, size: 24, font: '맑은 고딕', color: '0E2750' })] : [new TextRun({ break: 1, text: line, size: 24, font: '맑은 고딕', color: '0E2750' })]),
+        spacing: { before: 100, after: 200, line: 400 },
+        shading: { fill: 'F2F1EC' },
+        border: { left: { style: BorderStyle.SINGLE, size: 24, color: '0E2750', space: 8 } },
+        indent: { left: 240 }
+      });
+      const softHighlightP = (t) => new Paragraph({
+        children: t.split('\n').flatMap((line, i) => i === 0 ? [new TextRun({ text: line, size: 22, font: '맑은 고딕', color: '0E2750' })] : [new TextRun({ break: 1, text: line, size: 22, font: '맑은 고딕', color: '0E2750' })]),
+        spacing: { before: 100, after: 200, line: 380 },
+        shading: { fill: 'FBFAF6' },
+        border: { left: { style: BorderStyle.SINGLE, size: 24, color: 'C9A86A', space: 8 } },
+        indent: { left: 240 }
+      });
+      const dateP = () => new Paragraph({
+        children: [new TextRun({ text: '작성일 · ' + today, size: 20, font: '맑은 고딕', color: '6E7A8F' })],
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 80 }
+      });
+      const checkP = (checked, criteria, question) => new Paragraph({
+        children: [
+          new TextRun({ text: (checked ? '✓  ' : '·  '), bold: true, size: 22, font: '맑은 고딕', color: 'C9A86A' }),
+          new TextRun({ text: criteria + '  ', bold: true, size: 20, font: '맑은 고딕', color: '1B3A6B' }),
+          new TextRun({ text: question, size: 20, font: '맑은 고딕', color: '0E2750' })
+        ],
+        spacing: { before: 80, after: 80 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'E8E5DD', space: 4 } }
+      });
+      
+      const children = [dateP(), titleP('1 분  자 기 소 개')];
+      
+      // 회사·직무
+      if (basicInfo.company || basicInfo.position) {
+        const sub = (basicInfo.company || '') + 
+          (basicInfo.company && basicInfo.position ? ' · ' : '') +
+          (basicInfo.position ? basicInfo.position + ' 지원' : '');
+        children.push(subtitleP(sub));
+      }
+      
+      // 1분 본 답변
+      children.push(sectionH('1분 자기소개 — 최종 답변'));
+      if (finalAnswer && finalAnswer.trim()) {
+        children.push(highlightP(finalAnswer));
+      } else {
+        children.push(softHighlightP('[1분 자기소개 본 답변이 여기에 들어갑니다.]'));
+      }
+      
+      // 30초 단축 버전
+      children.push(sectionH('30초 단축 버전'));
+      if (shortAnswer && shortAnswer.trim()) {
+        children.push(softHighlightP(shortAnswer));
+      } else {
+        children.push(softHighlightP('[30초 단축 버전이 여기에 들어갑니다.]'));
+      }
+      
+      // 면접 당일 키워드 메모
+      children.push(sectionH('면접 당일 — 키워드 메모'));
+      children.push(labelP('30초 버전 키워드'));
+      if (answers['Q12']) children.push(labelBodyP(answers['Q12']));
+      else children.push(placeholderP('[작성 전]'));
+      children.push(labelP('1분 버전 키워드'));
+      if (answers['Q13']) children.push(labelBodyP(answers['Q13']));
+      else children.push(placeholderP('[작성 전]'));
+      
+      // 자가 점검 체크리스트
+      children.push(sectionH('자가 점검 체크리스트'));
+      CHECKLIST.forEach(c => {
+        children.push(checkP(checks[c.label], c.criteria, c.question));
+      });
+      
+      // 전체 작성 내용
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '', size: 22 })],
+        pageBreakBefore: true
+      }));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '전체 작성 내용', bold: true, size: 28, font: '맑은 고딕', color: '0E2750' })],
+        spacing: { before: 0, after: 100 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '0E2750', space: 4 } }
+      }));
+      STEPS.forEach(s => {
+        children.push(subH(`PART ${s.step}. ${s.title}`));
+        s.questions.forEach(q => {
+          children.push(labelP(`${q.label}. ${q.question}`));
+          if (answers[q.label]) children.push(labelBodyP(answers[q.label]));
+          else children.push(placeholderP('[작성 전]'));
+        });
+      });
+      
+      const doc = new Document({
+        creator: '',
+        title: '1분 자기소개',
+        sections: [{
+          properties: { page: { margin: { top: 1400, right: 1133, bottom: 1400, left: 1133 } } },
+          children: children
+        }]
+      });
+      
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `1분자기소개_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.docx`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
+    } catch (err) {
+      console.error('docx 생성 실패:', err);
+      alert('워드 문서 생성에 실패했습니다.\n' + (err.message || ''));
+    }
   };
 
   const S = {
@@ -970,8 +1069,16 @@ ${allAnswersSection}
                 <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
               </div>
               <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader}>
-                저장(.docx)
+                저장(.doc)
               </button>
+            <button onClick={clearSavedData} style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F44', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 8, whiteSpace: 'nowrap' }} title="저장된 작성 내용을 모두 지우고 처음부터 다시 시작">
+              새로 시작
+            </button>
+            {autoSaveStatus && (
+              <span style={{ fontSize: 12, color: autoSaveStatus.startsWith('⚠') ? '#C9A86A' : '#1FA47A', whiteSpace: 'nowrap', fontWeight: 500, marginLeft: 8 }}>
+                {autoSaveStatus}
+              </span>
+            )}
             </div>
           </div>
           <div style={S.cardLarge}>
@@ -1169,7 +1276,7 @@ ${allAnswersSection}
                 이전
               </button>
               <button onClick={downloadFinal} style={{ ...S.btnPrimary, flex: 1, padding: '18px 32px', fontSize: FONT.size.lg }}>
-                최종본 다운로드 (.docx)
+                최종본 다운로드 (.doc)
               </button>
             </div>
 
@@ -1210,8 +1317,16 @@ ${allAnswersSection}
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="self_introduction" />
             </div>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader}>
-              저장(.docx)
+              저장(.doc)
             </button>
+            <button onClick={clearSavedData} style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F44', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 8, whiteSpace: 'nowrap' }} title="저장된 작성 내용을 모두 지우고 처음부터 다시 시작">
+              새로 시작
+            </button>
+            {autoSaveStatus && (
+              <span style={{ fontSize: 12, color: autoSaveStatus.startsWith('⚠') ? '#C9A86A' : '#1FA47A', whiteSpace: 'nowrap', fontWeight: 500, marginLeft: 8 }}>
+                {autoSaveStatus}
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
             <div style={{ ...S.progressTrack, flex: 1 }}>
