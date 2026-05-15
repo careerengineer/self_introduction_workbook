@@ -806,11 +806,29 @@ const SelfIntroWorkbook = () => {
   // docx 라이브러리 동적 로드
   const loadDocxLib = () => new Promise((resolve, reject) => {
     if (window.docx) return resolve(window.docx);
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/docx@9.6.1/dist/index.iife.js';
-    script.onload = () => window.docx ? resolve(window.docx) : reject(new Error('로드 실패'));
-    script.onerror = () => reject(new Error('다운로드 실패'));
-    document.head.appendChild(script);
+    const sources = [
+      'https://cdn.jsdelivr.net/npm/docx@9.6.1/build/index.umd.min.js',
+      'https://unpkg.com/docx@9.6.1/dist/index.iife.js',
+      'https://cdn.jsdelivr.net/npm/docx@9.6.1/dist/index.iife.js',
+      'https://unpkg.com/docx@9.6.1/build/index.umd.min.js',
+    ];
+    let idx = 0;
+    const tryNext = () => {
+      if (idx >= sources.length) {
+        reject(new Error('docx 라이브러리 다운로드 실패'));
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = sources[idx++];
+      script.async = true;
+      script.onload = () => {
+        if (window.docx) resolve(window.docx);
+        else tryNext();
+      };
+      script.onerror = () => tryNext();
+      document.head.appendChild(script);
+    };
+    tryNext();
   });
 
   const downloadFinal = async () => {
