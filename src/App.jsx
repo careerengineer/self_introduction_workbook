@@ -1506,6 +1506,28 @@ const SelfIntroWorkbook = () => {
             {s.intro && (
               <p style={{ ...S.subtitle, marginTop: SPACING.sm }}>{s.intro}</p>
             )}
+            {currentStep === 0 && (
+              <div style={{ background: COLORS.cream, borderLeft: `4px solid ${COLORS.accent2}`, borderRadius: RADIUS.sm, padding: SPACING.md, marginTop: SPACING.md }}>
+                <p style={{ fontSize: FONT.size.sm, fontWeight: FONT.weight.bold, color: COLORS.goldDeep, margin: 0, marginBottom: SPACING.sm }}>1분 자기소개의 핵심</p>
+                <p style={{ fontSize: FONT.size.sm, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.relaxed, marginBottom: SPACING.sm }}>
+                  면접관이 1분 안에 확인하고 싶은 건 — <strong>"이 사람이 이 직무에 어떻게 기여할 사람인가"</strong>. 자랑·나열이 아니라 아래 3가지가 첫 문장 한 줄로 정리되어야 합니다.
+                </p>
+                <ol style={{ fontSize: FONT.size.sm, color: COLORS.accent, paddingLeft: 20, margin: 0, lineHeight: FONT.lineHeight.relaxed }}>
+                  <li><strong>직무 관련 경험으로 쌓은 핵심 역량 1개</strong> — 경험으로 증명되는 강점</li>
+                  <li><strong>그 역량으로 이 직무에 할 수 있는 기여</strong> — 직무 연결</li>
+                  <li><strong>위 둘을 묶어 이름으로 마무리</strong> — "…할 수 있는 ○○○입니다"</li>
+                </ol>
+                <div style={{ background: COLORS.bg, borderRadius: RADIUS.sm, padding: SPACING.sm, marginTop: SPACING.sm, border: `1px solid ${COLORS.border}` }}>
+                  <p style={{ fontSize: FONT.size.xs, fontWeight: FONT.weight.semibold, color: COLORS.accent, margin: 0, marginBottom: 4 }}>좋은 예시</p>
+                  <p style={{ fontSize: FONT.size.xs, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.base, fontStyle: 'italic' }}>
+                    자작자동차 동아리에서 SolidWorks로 서스펜션 브래킷을 설계·도면화하며 공차·구조 검토 역량을 쌓아, 이 직무에서 설계 단계부터 양산성을 확보하는 데 기여할 수 있는 김지원입니다.
+                  </p>
+                  <p style={{ fontSize: 11, color: COLORS.sub, margin: '6px 0 0' }}>
+                    → "SolidWorks로 서스펜션 브래킷을 설계한 경험"이 핵심 역량 · "설계 단계부터 양산성 확보에 기여"가 직무 기여 · "…할 수 있는 김지원입니다"가 이름 마무리
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: SPACING.lg }}>
