@@ -8,6 +8,10 @@ const MENTORING_URLS = {
   cover_letter:      'https://www.latpeed.com/products/fKnUV',  // 자소서 멘토링
   interview:         'https://www.latpeed.com/products/tZ5xw',  // 면접 멘토링
 };
+// 멘토링 프로세스 안내 (개별 워크북 전용)
+const MENTORING_PROCESS_URL = 'https://mentoringprocess.pages.dev/';
+const MENTORING_CTA_TEXT = '작성한 내용에 대한 채용담당자의 평가가 궁금하다면 1:1 멘토링을 받아보세요';
+const MENTORING_CTA_LINK = '멘토링 프로세스 안내 →';
 // ══════════════════════════════════════════════════════════════
 //  CareerEngineer 공식 디자인 토큰 (PART 7-2)
 // ══════════════════════════════════════════════════════════════
@@ -114,6 +118,31 @@ const IntroCTA = ({ onClick, children }) => (
   >
     {children || '시작하기'}
   </button>
+);
+
+const MentoringCTA = () => (
+  <a
+    href={MENTORING_PROCESS_URL}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      display: 'block',
+      background: '#FBFAF6',
+      border: `1px solid ${_INTRO_GOLD}66`,
+      borderLeft: `4px solid ${_INTRO_GOLD}`,
+      borderRadius: 10,
+      padding: 16,
+      marginTop: 16,
+      textDecoration: 'none',
+      color: _INTRO_INK,
+      fontFamily: _INTRO_FONT,
+    }}
+  >
+    <p style={{ fontSize: 14, color: _INTRO_INK, margin: 0, lineHeight: 1.6 }}>
+      {MENTORING_CTA_TEXT}.
+      {' '}<span style={{ color: _INTRO_INK, fontWeight: 700, textDecoration: 'underline' }}>{MENTORING_CTA_LINK}</span>
+    </p>
+  </a>
 );
 
 const IntroFlowCard = ({ flow, flowTitle }) => {
@@ -233,6 +262,7 @@ const IntroPage = ({
         <IntroPrerequisites items={prerequisites} />
         {extraContent}
         <IntroCopyright />
+        <MentoringCTA />
         <IntroCTA onClick={onStart} />
       </div>
 
